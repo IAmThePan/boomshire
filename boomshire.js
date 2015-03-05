@@ -1,9 +1,7 @@
-function svgClick() {
-    if (c.numClicks-- > 0) {
-        c.createCircle("expanding", this.event.clientX - c.svg.offsetLeft, this.event.clientY - c.svg.offsetTop);
-    }
-}
-
+/*ToDo:
+    Optimize moving for 100000 balls without collisions
+    Optimize collisions for 5000 balls
+*/
 function Boomshire (numBalls) {
     //SVG Properties
     this.svg        = document.getElementById("svg");
@@ -13,29 +11,30 @@ function Boomshire (numBalls) {
     //Circle Properties
     this.radius     = 10;
     this.bounceR    = this.radius;
-    this.colors     = ["#abcdef", "#bcdefa", "#cdefab", "#defabc", "#efabcd", "#fabcde"];
+    this.colors     = ["#abcdef", "#abcdfe", "#abcedf", "#abcefd", "#abcfde", "#abcfed", "#abdcef", "#abdcfe", "#abdecf", "#abdefc", "#abdfce", "#abdfec", "#abecdf", "#abecfd", "#abedcf", "#abedfc", "#abefcd", "#abefdc", "#abfcde", "#abfced", "#abfdce", "#abfdec", "#abfecd", "#abfedc", "#acbdef", "#acbdfe", "#acbedf", "#acbefd", "#acbfde", "#acbfed", "#acdbef", "#acdbfe", "#acdebf", "#acdefb", "#acdfbe", "#acdfeb", "#acebdf", "#acebfd", "#acedbf", "#acedfb", "#acefbd", "#acefdb", "#acfbde", "#acfbed", "#acfdbe", "#acfdeb", "#acfebd", "#acfedb", "#adbcef", "#adbcfe", "#adbecf", "#adbefc", "#adbfce", "#adbfec", "#adcbef", "#adcbfe", "#adcebf", "#adcefb", "#adcfbe", "#adcfeb", "#adebcf", "#adebfc", "#adecbf", "#adecfb", "#adefbc", "#adefcb", "#adfbce", "#adfbec", "#adfcbe", "#adfceb", "#adfebc", "#adfecb", "#aebcdf", "#aebcfd", "#aebdcf", "#aebdfc", "#aebfcd", "#aebfdc", "#aecbdf", "#aecbfd", "#aecdbf", "#aecdfb", "#aecfbd", "#aecfdb", "#aedbcf", "#aedbfc", "#aedcbf", "#aedcfb", "#aedfbc", "#aedfcb", "#aefbcd", "#aefbdc", "#aefcbd", "#aefcdb", "#aefdbc", "#aefdcb", "#afbcde", "#afbced", "#afbdce", "#afbdec", "#afbecd", "#afbedc", "#afcbde", "#afcbed", "#afcdbe", "#afcdeb", "#afcebd", "#afcedb", "#afdbce", "#afdbec", "#afdcbe", "#afdceb", "#afdebc", "#afdecb", "#afebcd", "#afebdc", "#afecbd", "#afecdb", "#afedbc", "#afedcb", "#bacdef", "#bacdfe", "#bacedf", "#bacefd", "#bacfde", "#bacfed", "#badcef", "#badcfe", "#badecf", "#badefc", "#badfce", "#badfec", "#baecdf", "#baecfd", "#baedcf", "#baedfc", "#baefcd", "#baefdc", "#bafcde", "#bafced", "#bafdce", "#bafdec", "#bafecd", "#bafedc", "#bcadef", "#bcadfe", "#bcaedf", "#bcaefd", "#bcafde", "#bcafed", "#bcdaef", "#bcdafe", "#bcdeaf", "#bcdefa", "#bcdfae", "#bcdfea", "#bceadf", "#bceafd", "#bcedaf", "#bcedfa", "#bcefad", "#bcefda", "#bcfade", "#bcfaed", "#bcfdae", "#bcfdea", "#bcfead", "#bcfeda", "#bdacef", "#bdacfe", "#bdaecf", "#bdaefc", "#bdafce", "#bdafec", "#bdcaef", "#bdcafe", "#bdceaf", "#bdcefa", "#bdcfae", "#bdcfea", "#bdeacf", "#bdeafc", "#bdecaf", "#bdecfa", "#bdefac", "#bdefca", "#bdface", "#bdfaec", "#bdfcae", "#bdfcea", "#bdfeac", "#bdfeca", "#beacdf", "#beacfd", "#beadcf", "#beadfc", "#beafcd", "#beafdc", "#becadf", "#becafd", "#becdaf", "#becdfa", "#becfad", "#becfda", "#bedacf", "#bedafc", "#bedcaf", "#bedcfa", "#bedfac", "#bedfca", "#befacd", "#befadc", "#befcad", "#befcda", "#befdac", "#befdca", "#bfacde", "#bfaced", "#bfadce", "#bfadec", "#bfaecd", "#bfaedc", "#bfcade", "#bfcaed", "#bfcdae", "#bfcdea", "#bfcead", "#bfceda", "#bfdace", "#bfdaec", "#bfdcae", "#bfdcea", "#bfdeac", "#bfdeca", "#bfeacd", "#bfeadc", "#bfecad", "#bfecda", "#bfedac", "#bfedca", "#cabdef", "#cabdfe", "#cabedf", "#cabefd", "#cabfde", "#cabfed", "#cadbef", "#cadbfe", "#cadebf", "#cadefb", "#cadfbe", "#cadfeb", "#caebdf", "#caebfd", "#caedbf", "#caedfb", "#caefbd", "#caefdb", "#cafbde", "#cafbed", "#cafdbe", "#cafdeb", "#cafebd", "#cafedb", "#cbadef", "#cbadfe", "#cbaedf", "#cbaefd", "#cbafde", "#cbafed", "#cbdaef", "#cbdafe", "#cbdeaf", "#cbdefa", "#cbdfae", "#cbdfea", "#cbeadf", "#cbeafd", "#cbedaf", "#cbedfa", "#cbefad", "#cbefda", "#cbfade", "#cbfaed", "#cbfdae", "#cbfdea", "#cbfead", "#cbfeda", "#cdabef", "#cdabfe", "#cdaebf", "#cdaefb", "#cdafbe", "#cdafeb", "#cdbaef", "#cdbafe", "#cdbeaf", "#cdbefa", "#cdbfae", "#cdbfea", "#cdeabf", "#cdeafb", "#cdebaf", "#cdebfa", "#cdefab", "#cdefba", "#cdfabe", "#cdfaeb", "#cdfbae", "#cdfbea", "#cdfeab", "#cdfeba", "#ceabdf", "#ceabfd", "#ceadbf", "#ceadfb", "#ceafbd", "#ceafdb", "#cebadf", "#cebafd", "#cebdaf", "#cebdfa", "#cebfad", "#cebfda", "#cedabf", "#cedafb", "#cedbaf", "#cedbfa", "#cedfab", "#cedfba", "#cefabd", "#cefadb", "#cefbad", "#cefbda", "#cefdab", "#cefdba", "#cfabde", "#cfabed", "#cfadbe", "#cfadeb", "#cfaebd", "#cfaedb", "#cfbade", "#cfbaed", "#cfbdae", "#cfbdea", "#cfbead", "#cfbeda", "#cfdabe", "#cfdaeb", "#cfdbae", "#cfdbea", "#cfdeab", "#cfdeba", "#cfeabd", "#cfeadb", "#cfebad", "#cfebda", "#cfedab", "#cfedba", "#dabcef", "#dabcfe", "#dabecf", "#dabefc", "#dabfce", "#dabfec", "#dacbef", "#dacbfe", "#dacebf", "#dacefb", "#dacfbe", "#dacfeb", "#daebcf", "#daebfc", "#daecbf", "#daecfb", "#daefbc", "#daefcb", "#dafbce", "#dafbec", "#dafcbe", "#dafceb", "#dafebc", "#dafecb", "#dbacef", "#dbacfe", "#dbaecf", "#dbaefc", "#dbafce", "#dbafec", "#dbcaef", "#dbcafe", "#dbceaf", "#dbcefa", "#dbcfae", "#dbcfea", "#dbeacf", "#dbeafc", "#dbecaf", "#dbecfa", "#dbefac", "#dbefca", "#dbface", "#dbfaec", "#dbfcae", "#dbfcea", "#dbfeac", "#dbfeca", "#dcabef", "#dcabfe", "#dcaebf", "#dcaefb", "#dcafbe", "#dcafeb", "#dcbaef", "#dcbafe", "#dcbeaf", "#dcbefa", "#dcbfae", "#dcbfea", "#dceabf", "#dceafb", "#dcebaf", "#dcebfa", "#dcefab", "#dcefba", "#dcfabe", "#dcfaeb", "#dcfbae", "#dcfbea", "#dcfeab", "#dcfeba", "#deabcf", "#deabfc", "#deacbf", "#deacfb", "#deafbc", "#deafcb", "#debacf", "#debafc", "#debcaf", "#debcfa", "#debfac", "#debfca", "#decabf", "#decafb", "#decbaf", "#decbfa", "#decfab", "#decfba", "#defabc", "#defacb", "#defbac", "#defbca", "#defcab", "#defcba", "#dfabce", "#dfabec", "#dfacbe", "#dfaceb", "#dfaebc", "#dfaecb", "#dfbace", "#dfbaec", "#dfbcae", "#dfbcea", "#dfbeac", "#dfbeca", "#dfcabe", "#dfcaeb", "#dfcbae", "#dfcbea", "#dfceab", "#dfceba", "#dfeabc", "#dfeacb", "#dfebac", "#dfebca", "#dfecab", "#dfecba", "#eabcdf", "#eabcfd", "#eabdcf", "#eabdfc", "#eabfcd", "#eabfdc", "#eacbdf", "#eacbfd", "#eacdbf", "#eacdfb", "#eacfbd", "#eacfdb", "#eadbcf", "#eadbfc", "#eadcbf", "#eadcfb", "#eadfbc", "#eadfcb", "#eafbcd", "#eafbdc", "#eafcbd", "#eafcdb", "#eafdbc", "#eafdcb", "#ebacdf", "#ebacfd", "#ebadcf", "#ebadfc", "#ebafcd", "#ebafdc", "#ebcadf", "#ebcafd", "#ebcdaf", "#ebcdfa", "#ebcfad", "#ebcfda", "#ebdacf", "#ebdafc", "#ebdcaf", "#ebdcfa", "#ebdfac", "#ebdfca", "#ebfacd", "#ebfadc", "#ebfcad", "#ebfcda", "#ebfdac", "#ebfdca", "#ecabdf", "#ecabfd", "#ecadbf", "#ecadfb", "#ecafbd", "#ecafdb", "#ecbadf", "#ecbafd", "#ecbdaf", "#ecbdfa", "#ecbfad", "#ecbfda", "#ecdabf", "#ecdafb", "#ecdbaf", "#ecdbfa", "#ecdfab", "#ecdfba", "#ecfabd", "#ecfadb", "#ecfbad", "#ecfbda", "#ecfdab", "#ecfdba", "#edabcf", "#edabfc", "#edacbf", "#edacfb", "#edafbc", "#edafcb", "#edbacf", "#edbafc", "#edbcaf", "#edbcfa", "#edbfac", "#edbfca", "#edcabf", "#edcafb", "#edcbaf", "#edcbfa", "#edcfab", "#edcfba", "#edfabc", "#edfacb", "#edfbac", "#edfbca", "#edfcab", "#edfcba", "#efabcd", "#efabdc", "#efacbd", "#efacdb", "#efadbc", "#efadcb", "#efbacd", "#efbadc", "#efbcad", "#efbcda", "#efbdac", "#efbdca", "#efcabd", "#efcadb", "#efcbad", "#efcbda", "#efcdab", "#efcdba", "#efdabc", "#efdacb", "#efdbac", "#efdbca", "#efdcab", "#efdcba", "#fabcde", "#fabced", "#fabdce", "#fabdec", "#fabecd", "#fabedc", "#facbde", "#facbed", "#facdbe", "#facdeb", "#facebd", "#facedb", "#fadbce", "#fadbec", "#fadcbe", "#fadceb", "#fadebc", "#fadecb", "#faebcd", "#faebdc", "#faecbd", "#faecdb", "#faedbc", "#faedcb", "#fbacde", "#fbaced", "#fbadce", "#fbadec", "#fbaecd", "#fbaedc", "#fbcade", "#fbcaed", "#fbcdae", "#fbcdea", "#fbcead", "#fbceda", "#fbdace", "#fbdaec", "#fbdcae", "#fbdcea", "#fbdeac", "#fbdeca", "#fbeacd", "#fbeadc", "#fbecad", "#fbecda", "#fbedac", "#fbedca", "#fcabde", "#fcabed", "#fcadbe", "#fcadeb", "#fcaebd", "#fcaedb", "#fcbade", "#fcbaed", "#fcbdae", "#fcbdea", "#fcbead", "#fcbeda", "#fcdabe", "#fcdaeb", "#fcdbae", "#fcdbea", "#fcdeab", "#fcdeba", "#fceabd", "#fceadb", "#fcebad", "#fcebda", "#fcedab", "#fcedba", "#fdabce", "#fdabec", "#fdacbe", "#fdaceb", "#fdaebc", "#fdaecb", "#fdbace", "#fdbaec", "#fdbcae", "#fdbcea", "#fdbeac", "#fdbeca", "#fdcabe", "#fdcaeb", "#fdcbae", "#fdcbea", "#fdceab", "#fdceba", "#fdeabc", "#fdeacb", "#fdebac", "#fdebca", "#fdecab", "#fdecba", "#feabcd", "#feabdc", "#feacbd", "#feacdb", "#feadbc", "#feadcb", "#febacd", "#febadc", "#febcad", "#febcda", "#febdac", "#febdca", "#fecabd", "#fecadb", "#fecbad", "#fecbda", "#fecdab", "#fecdba", "#fedabc", "#fedacb", "#fedbac", "#fedbca", "#fedcab", "#fedcba"];
     this.steadyT    = 60;
     this.numBalls   = numBalls || 10;
 
     //Game Properties
-    this.numClicks  = 1;
+    this.numClicks  = 10;
     
     this.setup();
 }
 
 Boomshire.prototype.setup = function () {
-    var n, circles, context;
+    var n, circles, context = this;
     
     //SVG Initialize
-    this.svg.setAttribute("onclick",'svgClick()');
     this.svg.setAttribute("height", this.height + "px");
     this.svg.setAttribute("width",  this.width  + "px");
-    
+    this.svg.addEventListener("click", function (event) {
+        context.svgClick(event);
+    }, false);
+
     //Circles Initialize
     for (n = 0; n < this.numBalls; n++) this.createCircle();
     
     circles = this.svg.getElementsByTagName("circle");
-    context = this;
     window.setInterval(function () {
         var circle, action;
         for (n = 0; n < circles.length; n++) {
@@ -47,6 +46,16 @@ Boomshire.prototype.setup = function () {
             if (action === "shrinking") context.shrink(circle);
         }
     }, 20);
+}
+
+Boomshire.prototype.svgClick = function (eevnt) {
+    if (this.numClicks-- > 0) {
+        this.createCircle(
+            "expanding", 
+            event.clientX - this.svg.offsetLeft, 
+            event.clientY - this.svg.offsetTop
+        );
+    }
 }
 
 Boomshire.prototype.createCircle = function (action, x, y) {
@@ -161,5 +170,3 @@ Boomshire.prototype.move = function (circle) {
     circle.attributes["cx"].value = cx + velocity*Math.cos(direction);
     circle.attributes["cy"].value = cy + velocity*Math.sin(direction);
 }
-
-var c = new Boomshire();
