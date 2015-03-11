@@ -1,15 +1,53 @@
 <!DOCTYPE html>
 <head>
     <style>
-        svg {
-        	background-color: #2C3E50;
+        body {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            background-color: black;
+        }
+        #svg {
+            border: 2px solid #6DBCDB;
+            background-color: #2C3E50;
+         }
+        div#gameStatus {
+            padding-top: 15px;
+            color: white;
+        }
+        div#gamePlay {
+            padding-top: 15px;
+            color: white;
+            display: none;
+            flex-direction: row;
+        }
+        div#gamePlay div {
+            padding: 0 15px;
         }
     </style>
 </head>
 <body>
     <svg id="svg"></svg>
+    <div id="gameStatus">
+        Circles:
+        <span id="expanded"></span>
+        /
+        <span id="toWin"></span>
+        of
+        <span id="total"></span>
+    </div>
+     <div id="gamePlay">
+        <div>Journey</div>
+        <div>New Game</div>
+        <div>New Game</div>
+        <div>New Game</div>
+        <div>New Game</div>
+    </div>
     <script src="boomshire.js"></script>
     <script>
     	var c = new Boomshire(60);
+        c.newGame(60, 55, 2);
     </script>
 </body>

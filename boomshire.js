@@ -2,28 +2,38 @@
     Optimize moving for 100000 balls without collisions
     Optimize collisions for 5000 balls
 */
-function Boomshire (numBalls) {
-    //SVG Properties
-    this.svg        = document.getElementById("svg");
-    this.height     = 450;
-    this.width      = 700;
-    
-    //Circle Properties
-    this.radius     = 10;
-    this.bounceR    = this.radius;
-    this.colors     = ["#FC4349", "#D7DADB", "#6DBCDB", "#FFFFFF"];
-    this.steadyT    = 60;
-    this.numBalls   = numBalls || 10;
-
+function Boomshire () {
     //Game Properties
-    this.numClicks  = 10;
-    
-    this.setup();
+    this.ballsTotal;
+    this.ballsToWin;
+    this.ballsExpanded;
+    this.clicksAllowed;
+    this.circles;
+
+    //On Screen Elements
+    this.svg            = document.getElementById("svg");
+    this.expanded       = document.getElementById("expanded");
+    this.toWin          = document.getElementById("toWin");
+    this.total          = document.getElementById("total");
+
+    //SVG Properties
+    this.height         = 400;
+    this.width          = 550;
+
+    //Circle Properties
+    this.ballRadius     = 7;
+    this.ballRadiusBig  = 50;
+    this.ballGrowSpeed  = 1.5;
+    this.bounceRadius   = this.ballRadius;
+    this.ballColors     = ["#FC4349", "#D7DADB", "#6DBCDB", "#FFFFFF"];
+    this.expandedTime   = 60;
+
+    this.initialize();
 }
 
-Boomshire.prototype.setup = function () {
-    var n, circles, context = this;
-    
+Boomshire.prototype.initialize = function () {
+    context = this;
+
     //SVG Initialize
     this.svg.setAttribute("height", this.height + "px");
     this.svg.setAttribute("width",  this.width  + "px");
@@ -31,57 +41,82 @@ Boomshire.prototype.setup = function () {
         context.svgClick(event);
     }, false);
 
-    //Circles Initialize
-    for (n = 0; n < this.numBalls; n++) this.createCircle();
-    
-    circles = this.svg.getElementsByTagName("circle");
     window.setInterval(function () {
-        var circle, action;
-        for (n = 0; n < circles.length; n++) {
-            circle = circles[n];
-            action = circle.getAttribute("action");
-            if (action === "moving")    context.checkMove(circles, circle);
-            if (action === "expanding") context.expand(circle);
-            if (action === "steady")    context.steady(circle);
-            if (action === "shrinking") context.shrink(circle);
-        }
+        var n;
+        for (n = 0; n < context.circles.moving.length; n++)     context.move(context.circles.moving[n]);
+        for (n = 0; n < context.circles.expanding.length; n++)  context.expand(context.circles.expanding[n]);
+        for (n = 0; n < context.circles.steady.length; n++)     context.steady(context.circles.steady[n]);
+        for (n = 0; n < context.circles.shrinking.length; n++)  context.shrink(context.circles.shrinking[n]);
     }, 20);
 }
 
-Boomshire.prototype.svgClick = function (eevnt) {
-    if (this.numClicks-- > 0) {
+Boomshire.prototype.newGame = function (ballsTotal, ballsToWin, clicksAllowed) {
+    //Game Properties
+    this.ballsTotal     = ballsTotal    || 5;
+    this.ballsToWin     = ballsToWin    || 1;
+    this.ballsExpanded  = 0;
+    this.clicksAllowed  = clicksAllowed || 1;
+    this.circles        = {
+        "moving":       [],
+        "expanding":    [],
+        "steady":       [],
+        "shrinking":    []
+    };
+
+    //Labels Initialize
+    this.expanded.innerHTML = this.ballsExpanded;
+    this.toWin.innerHTML    = this.ballsToWin;
+    this.total.innerHTML    = this.ballsTotal;
+
+    //Circles Initialize
+    for (n = 0; n < this.ballsTotal; n++) this.createCircle();
+}
+
+Boomshire.prototype.svgClick = function (event) {
+    if (this.clicksAllowed-- > 0) {
         this.createCircle(
             "expanding", 
-            event.clientX - this.svg.offsetLeft, 
-            event.clientY - this.svg.offsetTop
+            event.clientX - this.svg.getBoundingClientRect().left,
+            event.clientY - this.svg.getBoundingClientRect().top
         );
     }
 }
 
 Boomshire.prototype.createCircle = function (action, x, y) {
     action  = action    || "moving";
-    x       = x         || Math.random()*(this.width  - 2*this.radius) + this.radius;
-    y       = y         || Math.random()*(this.height - 2*this.radius) + this.radius; 
-    
-    var circle, 
-        xmlns = "http://www.w3.org/2000/svg";
+    x       = x         || Math.random()*(this.width  - 2*this.ballRadius) + this.ballRadius;
+    y       = y         || Math.random()*(this.height - 2*this.ballRadius) + this.ballRadius;
 
-    circle = document.createElementNS(xmlns, "circle");
-    circle.setAttribute("cx", x);
-    circle.setAttribute("cy", y);
-    circle.setAttribute("bounceX", "");
-    circle.setAttribute("bounceY", "");
-    circle.setAttribute("r", this.radius);
-    circle.setAttribute("velocity", this.getVelocity());
-    circle.setAttribute("direction", this.getDirection());
-    circle.setAttribute("fill", this.getColor());
-    circle.setAttribute("steadyLength", this.steadyT);
-    circle.setAttribute("action", action);
-    this.svg.appendChild(circle);
+    var circleSVG, 
+        xmlns = "http://www.w3.org/2000/svg",
+        circle = {
+            element:    null,
+            xPos:       x,
+            yPos:       y,
+            radius:     this.ballRadius,
+            bounceX:    "",
+            bounceY:    "",
+            velocity:   this.getVelocity(),
+            direction:  this.getDirection(),
+            color:      this.getColor(),
+            opacity:    (action === "moving") ? 1 : 0.5,
+            steadyTime: this.expandedTime
+        };
+
+    this.circles[action].push(circle);
+
+    circleSVG = document.createElementNS(xmlns, "circle");
+    circleSVG.setAttribute("cx", circle.xPos.toString());
+    circleSVG.setAttribute("cy", circle.yPos.toString());
+    circleSVG.setAttribute("r", circle.radius);
+    circleSVG.setAttribute("fill", circle.color);
+    circleSVG.setAttribute("opacity", circle.opacity);
+    this.svg.appendChild(circleSVG);
+    circle.element = circleSVG;
 }
 
 Boomshire.prototype.getVelocity = function () {
-    return Math.random()*1 + 1;
+    return Math.random()*0.6 + 0.6;
 }
 
 Boomshire.prototype.getDirection = function () {
@@ -89,84 +124,107 @@ Boomshire.prototype.getDirection = function () {
 }
 
 Boomshire.prototype.getColor = function () {
-    return this.colors[Math.floor(Math.random() * this.colors.length)];
+    return this.ballColors[Math.floor(Math.random() * this.ballColors.length)];
 }
 
-Boomshire.prototype.checkMove = function (circles, circle) {
-    var n;
-    for (n = 0; n < circles.length; n++) {
-        if (circles[n].attributes["action"].value !== "moving" && this.checkOverlap(circles[n], circle)) {
-            circle.attributes["action"].value = "expanding";
-            return;
+Boomshire.prototype.move = function (circle) {
+    //Check for Collisions
+    var i, m, n,
+        states = ["expanding", "steady", "shrinking"];
+
+    for (i = 0; i < states.length; i++) {
+        for (m = 0; m < this.circles[states[i]].length; m++) {
+            if (this.checkOverlap(this.circles[states[i]][m], circle)) {
+                circle.element.attributes.opacity.value = 0.5;
+                
+                n = this.circles.moving.indexOf(circle);
+                if (n > -1) this.circles.moving.splice(n, 1);
+                this.circles.expanding.push(circle);
+
+                this.ballsExpanded = this.ballsExpanded + 1;
+                this.expanded.innerHTML = this.ballsExpanded;
+                return;
+            }
         }
     }
-    this.move(circle);
+
+    //Move
+    if (circle.xPos <= this.bounceRadius               && circle.bounceX !== "left") {
+        circle.bounceX      = "left";
+        circle.direction    = Math.PI - circle.direction;
+    }
+    if (circle.xPos >= this.width - this.bounceRadius  && circle.bounceX !== "right") {
+        circle.bounceX      = "right";
+        circle.direction    = Math.PI - circle.direction;
+    }
+    if (circle.yPos <= this.bounceRadius               && circle.bounceY !== "top") {
+        circle.bounceY      = "top";
+        circle.direction    = -circle.direction;
+    }
+    if (circle.yPos >= this.height - this.bounceRadius && circle.bounceY !== "bottom") {
+        circle.bounceY      = "bottom";
+        circle.direction    = -circle.direction;
+    }
+
+    circle.xPos = circle.xPos + circle.velocity*Math.cos(circle.direction);
+    circle.yPos = circle.yPos + circle.velocity*Math.sin(circle.direction);
+
+    circle.element.attributes.cx.value = circle.xPos;
+    circle.element.attributes.cy.value = circle.yPos;
+}
+
+Boomshire.prototype.expand = function (circle) {
+    var n;
+
+    if (circle.radius < this.ballRadiusBig) {
+        circle.radius = circle.radius + this.ballGrowSpeed;
+        circle.element.attributes.r.value = circle.radius;
+    }
+    else {
+        n = this.circles.expanding.indexOf(circle);
+        if (n > -1) this.circles.expanding.splice(n, 1);
+        this.circles.steady.push(circle);
+    }
+}
+
+Boomshire.prototype.steady = function (circle) {
+    var n;
+
+    if (circle.steadyTime > 0) {
+        circle.steadyTime  = circle.steadyTime - 1;
+    }
+    else {
+        n = this.circles.steady.indexOf(circle);
+        if (n > -1) this.circles.steady.splice(n, 1);
+        this.circles.shrinking.push(circle);
+    }
+}
+
+Boomshire.prototype.shrink = function (circle) {
+    var n; 
+
+    if (circle.radius - this.ballGrowSpeed > 0) {
+        circle.radius = circle.radius - this.ballGrowSpeed;
+        circle.element.attributes.r.value = circle.radius;
+    }
+    else {
+        n = this.circles.shrinking.indexOf(circle);
+        if (n > -1) this.circles.shrinking.splice(n, 1);
+        this.svg.removeChild(circle.element);
+    }
 }
 
 Boomshire.prototype.checkOverlap = function (circle1, circle2) {
-    //Quick and Drity Test with Bounding Boxes
-    var b1 = circle1.getBoundingClientRect(),
-        b2 = circle2.getBoundingClientRect();
-    if (b2.left > b1.right || b2.right < b1.left || b2.top > b1.bottom || b2.bottom < b1.top) return false;
-
-    //More accurate test with distance formula
-    var r1  = circle1.r.baseVal.value,
-        r2  = circle2.r.baseVal.value,
-        cx1 = circle1.cx.baseVal.value,
-        cx2 = circle2.cx.baseVal.value,
-        cy1 = circle1.cy.baseVal.value,
-        cy2 = circle2.cy.baseVal.value;
+    var r1  = circle1.radius,
+        r2  = circle2.radius,
+        cx1 = circle1.xPos,
+        cx2 = circle2.xPos,
+        cy1 = circle1.yPos,
+        cy2 = circle2.yPos;
     
     if (Math.abs(r1 + r2) <= Math.sqrt( (cx1 - cx2)*(cx1 - cx2) + (cy1 - cy2)*(cy1 - cy2) )) return false;
     return true;
 }
 
-Boomshire.prototype.expand = function (circle) {
-    var r = circle.r.baseVal.value;
-    (r > 35) ?
-        circle.attributes["action"].value = "steady" :
-        circle.r.baseVal.value = r + 1;
-}
 
-Boomshire.prototype.shrink = function (circle) {
-    var r = circle.r.baseVal.value;
-    (r < 1) ? 
-        circle.remove() :
-        circle.r.baseVal.value = r - 1;
-}
 
-Boomshire.prototype.steady = function (circle) {
-    var t = circle.attributes["steadyLength"].value;
-    (t < 1) ?
-        circle.attributes["action"].value = "shrinking" :
-        circle.attributes["steadyLength"].value = t - 1;
-}
-
-Boomshire.prototype.move = function (circle) {
-    var cx = circle.cx.baseVal.value,
-        cy = circle.cy.baseVal.value,
-        bounceX = circle.attributes["bounceX"].value,
-        bounceY = circle.attributes["bounceY"].value,
-        velocity = circle.attributes["velocity"].value,
-        direction = circle.attributes["direction"].value;
-    
-    if (cx <= this.bounceR && bounceX != "left") {
-        circle.attributes["bounceX"].value = "left";
-        circle.attributes["direction"].value = Math.PI - direction;
-    }
-    if (cx >= this.width - this.bounceR && bounceX != "right") {
-        circle.attributes["bounceX"].value = "right";
-        circle.attributes["direction"].value = Math.PI - direction;
-    }
-    if (cy <= this.bounceR && bounceY != "top") {
-        circle.attributes["bounceY"].value = "top";
-        circle.attributes["direction"].value = -direction;
-    }
-    if (cy >= this.height - this.bounceR && bounceY != "bottom") {
-        circle.attributes["bounceY"].value = "bottom";
-        circle.attributes["direction"].value = -direction;
-    }
-
-    circle.attributes["cx"].value = cx + velocity*Math.cos(direction);
-    circle.attributes["cy"].value = cy + velocity*Math.sin(direction);
-}
