@@ -1,9 +1,23 @@
 /*ToDo:
     Optimize moving for 100000 balls without collisions
-    Optimize collisions for 5000 balls
 */
 function Boomshire () {
     //Game Properties
+    this.levels = [
+        {level: 1,  total: 5,  toWin: 1,  clicks: 1},
+        {level: 2,  total: 10, toWin: 2,  clicks: 1},
+        {level: 3,  total: 15, toWin: 3,  clicks: 1},
+        {level: 4,  total: 20, toWin: 5,  clicks: 1},
+        {level: 5,  total: 25, toWin: 7,  clicks: 1},
+        {level: 6,  total: 30, toWin: 10, clicks: 1},
+        {level: 7,  total: 35, toWin: 15, clicks: 1},
+        {level: 8,  total: 40, toWin: 21, clicks: 1},
+        {level: 9,  total: 45, toWin: 27, clicks: 1},
+        {level: 10, total: 50, toWin: 33, clicks: 1},
+        {level: 11, total: 55, toWin: 44, clicks: 1},
+        {level: 12, total: 60, toWin: 55, clicks: 1}
+    ];
+    this.pointsTotal = 0;
     this.ballsTotal;
     this.ballsToWin;
     this.ballsExpanded;
@@ -15,6 +29,8 @@ function Boomshire () {
     this.expanded       = document.getElementById("expanded");
     this.toWin          = document.getElementById("toWin");
     this.total          = document.getElementById("total");
+    this.gameStatus     = document.getElementById("gameStatus");
+    this.score          = document.getElementById("score");
 
     //SVG Properties
     this.height         = 400;
@@ -48,9 +64,22 @@ Boomshire.prototype.initialize = function () {
         for (n = 0; n < context.circles.steady.length; n++)     context.steady(context.circles.steady[n]);
         for (n = 0; n < context.circles.shrinking.length; n++)  context.shrink(context.circles.shrinking[n]);
     }, 20);
+
+    this.play();
+}
+
+Boomshire.prototype.play = function () {
+    var level = this.levels[0];
+    this.newGame(level.total, level.toWin, level.clicks);
 }
 
 Boomshire.prototype.newGame = function (ballsTotal, ballsToWin, clicksAllowed) {
+    //Remove Previous Game Elements
+    this.svg.classList.remove("win");
+    while (this.svg.firstChild) {
+        this.svg.removeChild(this.svg.firstChild);
+    }
+
     //Game Properties
     this.ballsTotal     = ballsTotal    || 5;
     this.ballsToWin     = ballsToWin    || 1;
@@ -67,6 +96,7 @@ Boomshire.prototype.newGame = function (ballsTotal, ballsToWin, clicksAllowed) {
     this.expanded.innerHTML = this.ballsExpanded;
     this.toWin.innerHTML    = this.ballsToWin;
     this.total.innerHTML    = this.ballsTotal;
+    this.score.innerHTML    = this.pointsTotal;
 
     //Circles Initialize
     for (n = 0; n < this.ballsTotal; n++) this.createCircle();
@@ -143,6 +173,10 @@ Boomshire.prototype.move = function (circle) {
 
                 this.ballsExpanded = this.ballsExpanded + 1;
                 this.expanded.innerHTML = this.ballsExpanded;
+
+                if (this.ballsExpanded === this.ballsToWin) {
+                    this.svg.classList.add("win");
+                }
                 return;
             }
         }
@@ -211,6 +245,24 @@ Boomshire.prototype.shrink = function (circle) {
         n = this.circles.shrinking.indexOf(circle);
         if (n > -1) this.circles.shrinking.splice(n, 1);
         this.svg.removeChild(circle.element);
+
+        if (this.circles.expanding.length === 0 && this.circles.steady.length === 0 && this.circles.shrinking.length === 0) {
+            if (this.ballsExpanded >= this.ballsToWin) {
+                this.pointsTotal = this.pointsTotal + this.ballsExpanded;
+                this.score.innerHTML = this.pointsTotal;
+                this.levels.shift()
+
+                if (this.levels.length > 0) {
+                    this.play();
+                }
+                else {
+                    this.gameStatus.innerHTML = "Game Over. You Win!";
+                }
+            }
+            else if (this.clicksAllowed === 0 && this.ballsExpanded < this.ballsToWin) {
+                this.play();
+            }
+        }
     }
 }
 
@@ -225,6 +277,3 @@ Boomshire.prototype.checkOverlap = function (circle1, circle2) {
     if (Math.abs(r1 + r2) <= Math.sqrt( (cx1 - cx2)*(cx1 - cx2) + (cy1 - cy2)*(cy1 - cy2) )) return false;
     return true;
 }
-
-
-
