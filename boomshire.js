@@ -259,7 +259,7 @@ Boomshire.prototype.shrink = function (circle) {
                     this.gameStatus.innerHTML = "Game Over. You Win!";
                 }
             }
-            else if (this.clicksAllowed === 0 && this.ballsExpanded < this.ballsToWin) {
+            else if (this.clicksAllowed <= 0 && this.ballsExpanded < this.ballsToWin) {
                 this.play();
             }
         }
